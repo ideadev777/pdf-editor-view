@@ -1,0 +1,27 @@
+@font-face {
+  font-family: 'TimesRoman';
+  src: url('./fonts/OPTITimes-Roman.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'TimesRomanBold';
+  src: url('./fonts/Time Roman Bold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'CourierBold';
+  src: url('./fonts/Courier Bold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'HelveticaBold';
+  src: url('./fonts/Helvetica Bold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
