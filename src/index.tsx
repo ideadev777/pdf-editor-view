@@ -26,6 +26,7 @@ interface Props {
   templates?: FieldProperties[];
   generate: Boolean;
   clearGenerate:() => void;
+  handleWheelEvent: (e: any) => void;
 }
 /*
 function getFontName(font: string | undefined): StandardFonts {
@@ -140,7 +141,8 @@ export const PDFEditor: React.FC<Props> = (props: Props) => {
         onAddNewField={handleAddNewField}
         onUpdateFields={handleUpdateFieldSets}
         onRemoveField={handleRemoveField}
-        onSuccessLoad={handleTPageChange} />
+        onSuccessLoad={handleTPageChange}
+        onWheelEvent={props.handleWheelEvent} />
     </DndProvider>
   )
 }
