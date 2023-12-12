@@ -132,14 +132,6 @@ const Editor = (props: Props) => {
     // setPosRB(null)
   }
 
-  const handleScroll = (e:any) => {
-    console.log('handle scroll', e)
-  }
-
-  const handleDivScroll = (e:any) => {
-    console.log('handle Div scroll', e)
-  }
-
   const handleWheel = (e:any) => {
     props.onWheelEvent(e)
   }
@@ -500,8 +492,8 @@ const Editor = (props: Props) => {
       onLoadSuccess={loadSuccess}
       options={options}
       file={source}>
-      <div style={{ height: 'calc(100vh - 116px)',  overflow: 'auto', backgroundColor: 'lightgray', display: 'flex', justifyContent: 'center', paddingTop: '20px', paddingBottom: '20px' }} onScroll={handleDivScroll}>
-        <Page scale={scale} canvasRef={drop} onKeyPress={handleKeyPress} onWheel={handleWheel} onScroll={handleScroll} onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} pageNumber={currentPage} renderAnnotationLayer={false} renderTextLayer={false}>
+      <div style={{ height: 'calc(100vh - 116px)',  overflow: 'auto', backgroundColor: 'lightgray', display: 'flex', justifyContent: 'center', paddingTop: '20px', paddingBottom: '20px' }}>
+        <Page scale={scale} canvasRef={drop} onKeyPress={handleKeyPress} onWheel={handleWheel} onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} pageNumber={currentPage} renderAnnotationLayer={false} renderTextLayer={false}>
           <div id='elementToCapture' style={{ position: 'absolute', top: 0, left: 0, transformOrigin: 'top left', transform: `scale(${scale})` }} className="viewport">
             {selected && renderTempField()}
             {renderCurrentFields()}
