@@ -494,7 +494,7 @@ const Editor = (props: Props) => {
       options={options}
       file={source}>
       {pages.map((number) => (
-        <div style={{ height: 'calc(100vh - 116px)',  overflow: 'auto', backgroundColor: 'lightgray', display: 'flex', justifyContent: 'center', paddingTop: '20px', paddingBottom: '20px' }}>
+        <div style={{ overflow: 'auto', backgroundColor: 'lightgray', display: 'flex', justifyContent: 'center', paddingTop: '20px', paddingBottom: '20px' }}>
           <Page scale={scale} canvasRef={drop} onKeyPress={handleKeyPress} onWheel={handleWheel} onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} pageNumber={number} renderAnnotationLayer={false} renderTextLayer={false}>
             <div id='elementToCapture' style={{ left: 0, transformOrigin: 'top left', transform: `scale(${scale})` }} className="viewport">
               {selected && renderTempField()}
