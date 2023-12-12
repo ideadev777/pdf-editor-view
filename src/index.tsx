@@ -23,7 +23,7 @@ interface Props {
   fieldsets: FieldProperties[];
   setFieldsets: (val: FieldProperties[]) => void;
   setGenerate:(fields: FieldProperties[], pdf_path: string) => void;
-  templates?: FieldProperties[];
+  templates: FieldProperties[];
   generate: Boolean;
   clearGenerate:() => void;
   handleWheelEvent: (e: any) => void;
@@ -101,7 +101,7 @@ export const PDFEditor: React.FC<Props> = (props: Props) => {
 
   const handleFileGenerate = async() => {
     if(!props.fieldsets.length) return
-    props.setGenerate(props.fieldsets, props.path);
+    props.setGenerate(props.templates.concat(props.fieldsets), props.path);
   }
 
   React.useEffect(() => {

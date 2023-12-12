@@ -137,7 +137,6 @@ const Editor = (props: Props) => {
   }
 
   const handleClick = (e: any) => {
-    console.log('handleclick', e)
     if(selected) {
       const pageCanvas = coordiate.current.parentNode
       const left = Math.floor(e.clientX - pageCanvas.getBoundingClientRect().left)
