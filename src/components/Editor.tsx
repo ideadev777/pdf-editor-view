@@ -493,7 +493,7 @@ const Editor = (props: Props) => {
       onLoadSuccess={loadSuccess}
       options={options}
       file={source}>
-      <div style={{ overflow: 'auto', backgroundColor: 'lightgray', display: 'flex', justifyContent: 'center', paddingTop: '20px', paddingBottom: '20px' }}>
+      <div style={{ overflow: 'auto', backgroundColor: 'lightgray', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '20px', paddingBottom: '20px' }}>
       {pages.map((number) => (
         <Page scale={scale} canvasRef={drop} onKeyPress={handleKeyPress} onWheel={handleWheel} onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} pageNumber={number} renderAnnotationLayer={false} renderTextLayer={false}>
           <div id='elementToCapture' style={{ top: 0, left: 0, transformOrigin: 'top left', transform: `scale(${scale})` }} className="viewport">
