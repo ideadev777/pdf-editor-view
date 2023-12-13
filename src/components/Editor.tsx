@@ -493,17 +493,19 @@ const Editor = (props: Props) => {
       onLoadSuccess={loadSuccess}
       options={options}
       file={source}>
-      <div style={{ overflow: 'auto', backgroundColor: 'lightgray', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '20px', paddingBottom: '20px' }}>
+      <div style={{ height: 'calc(100vh - 116px)', overflow: 'auto', backgroundColor: 'lightgray', display: 'flex', flexDirection: 'column', paddingTop: '20px', paddingBottom: '20px' }}>
       {pages.map((number) => (
-        <Page scale={scale} canvasRef={drop} onKeyPress={handleKeyPress} onWheel={handleWheel} onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} pageNumber={number} renderAnnotationLayer={false} renderTextLayer={false}>
-          <div id='elementToCapture' style={{ top: 0, left: 0, transformOrigin: 'top left', transform: `scale(${scale})` }} className="viewport">
-            {selected && renderTempField()}
-            {renderCurrentFields()}
-            {renderAddedFileds()}
-            {/* {posRB && renderSelectionRect()} */}
-          </div>
-          <div className='coord' ref={coordiate} style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, scale: 1 }}></div>
-        </Page>
+        <div key={`page-${number}`} style={{display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+          <Page scale={scale} canvasRef={drop} onKeyPress={handleKeyPress} onWheel={handleWheel} onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} pageNumber={number} renderAnnotationLayer={false} renderTextLayer={false}>
+            <div id='elementToCapture' style={{ top: 0, left: 0, transformOrigin: 'top left', transform: `scale(${scale})` }} className="viewport">
+              {selected && renderTempField()}
+              {renderCurrentFields()}
+              {renderAddedFileds()}
+              {/* {posRB && renderSelectionRect()} */}
+            </div>
+            <div className='coord' ref={coordiate} style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, scale: 1 }}></div>
+          </Page>
+        </div>
       ))}
       </div>
     </Document>
