@@ -77,7 +77,7 @@ const Editor = (props: Props) => {
   // const [posRB, setPosRB] = useState<any>(null)
   const { source, settings, selected, active, fieldsets, templates } = props;
 
-  const { scale } = settings;
+  const { currentPage, scale } = settings;
 
   const [, drop ] = useDrop(() => ({
       accept: 'field',
@@ -136,7 +136,7 @@ const Editor = (props: Props) => {
     props.onWheelEvent(e)
   }
 
-  const handleClick = (e: any, pageNumber: number) => {
+  const handleClick = (e: any) => {
     if(selected) {
       const pageCanvas = coordiate.current.parentNode
       const left = Math.floor(e.clientX - pageCanvas.getBoundingClientRect().left)
@@ -144,7 +144,7 @@ const Editor = (props: Props) => {
       
       const field : FieldProperties = {
         _id: new Date().getTime().toString(),
-        page: pageNumber,
+        page: currentPage,
         type: selected,
         position: {
           x: parseFloat(descaleSize(left)),
@@ -300,9 +300,9 @@ const Editor = (props: Props) => {
     }
   }
 
-  const renderCurrentFields = (pageNumber: number) => {
+  const renderCurrentFields = () => {
     if(!fieldsets) return
-    const renderCurrentList = fieldsets.filter((item: FieldProperties) => item.page === pageNumber);
+    const renderCurrentList = fieldsets.filter((item: FieldProperties) => item.page === currentPage);
 
     return renderCurrentList.map((item: FieldProperties) => {
       if(item === active) {
@@ -415,10 +415,10 @@ const Editor = (props: Props) => {
     });
   };
 
-  const renderAddedFileds = (pageNumber: number)=>{
+  const renderAddedFileds = ()=>{
     if(!templates) return
     
-    const renderAddedList = templates.filter((item: FieldProperties) => item.page === pageNumber);
+    const renderAddedList = templates.filter((item: FieldProperties) => item.page === currentPage);
     
     return renderAddedList.map((item: FieldProperties, index: number) => {
       if(item.type.icon === 'image') {
@@ -486,27 +486,21 @@ const Editor = (props: Props) => {
     props.onSuccessLoad(nextNumPages)
   }
   
-  const pages = Array.from({ length: settings.totalPage }, (_, index) => index + 1);
-
   return (
     <Document 
       onLoadSuccess={loadSuccess}
       options={options}
       file={source}>
-      <div style={{ height: 'calc(100vh - 116px)', overflow: 'auto', backgroundColor: 'lightgray', display: 'flex', flexDirection: 'column', paddingTop: '20px', paddingBottom: '20px' }}>
-      {pages.map((number) => (
-        <div key={`page-${number}`} style={{display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-          <Page scale={scale} canvasRef={drop} onKeyPress={handleKeyPress} onWheel={handleWheel} onClick={(e) => handleClick(e, number)}  onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} pageNumber={number} renderAnnotationLayer={false} renderTextLayer={false}>
-            <div id='elementToCapture' style={{ top: 0, left: 0, transformOrigin: 'top left', transform: `scale(${scale})` }} className="viewport">
-              {selected && renderTempField()}
-              {renderCurrentFields(number)}
-              {renderAddedFileds(number)}
-              {/* {posRB && renderSelectionRect()} */}
-            </div>
-            <div className='coord' ref={coordiate} style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, scale: 1 }}></div>
-          </Page>
-        </div>
-      ))}
+      <div style={{ height: 'calc(100vh - 116px)',  overflow: 'auto', backgroundColor: 'lightgray', display: 'flex', justifyContent: 'center', paddingTop: '20px', paddingBottom: '20px' }}>
+        <Page scale={scale} canvasRef={drop} onKeyPress={handleKeyPress} onWheel={handleWheel} onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} pageNumber={currentPage} renderAnnotationLayer={false} renderTextLayer={false}>
+          <div id='elementToCapture' style={{ position: 'absolute', top: 0, left: 0, transformOrigin: 'top left', transform: `scale(${scale})` }} className="viewport">
+            {selected && renderTempField()}
+            {renderCurrentFields()}
+            {renderAddedFileds()}
+            {/* {posRB && renderSelectionRect()} */}
+          </div>
+          <div className='coord' ref={coordiate} style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, scale: 1 }}></div>
+        </Page>
       </div>
     </Document>
   );
