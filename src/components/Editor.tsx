@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { useDrop } from 'react-dnd'
 import { Rnd } from 'react-rnd'
@@ -63,8 +63,8 @@ interface Props {
   onRemoveField: (id: string) => void,
   onActiveChange: (fields: FieldProperties | null) => void
   onClearSelected: () => void,
-  onSuccessLoad: (page: number) => void
-  onWheelEvent: (e: any) => void
+  onSuccessLoad: (page: number) => void,
+  onPageChange: (page: number) => void
 }
 
 const Editor = (props: Props) => {
@@ -72,22 +72,60 @@ const Editor = (props: Props) => {
   const coordiate = useRef<any>(null);
 
   const [show, setShow] = useState(false)
+  const [totalPages, setTotalPages] = useState(0);
 
   // const [posLT, setPosLT] = useState<any>(null)
   // const [posRB, setPosRB] = useState<any>(null)
   const { source, settings, selected, active, fieldsets, templates } = props;
 
-  const { currentPage, scale } = settings;
+  const { currentPage, pageButtonCnt, scale } = settings;
 
-  const [, drop ] = useDrop(() => ({
-      accept: 'field',
-      collect: (monitor) => ({
-        isOver: monitor.isOver(),
-        canDrop: monitor.canDrop(),
-      }),
-    })
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Step 2: Use useEffect to log the scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      // Access scroll position using ref.current.scrollTop
+      const scrollContainer = scrollContainerRef.current;
+      if (scrollContainer) {
+        const pageCanvas = coordiate.current.parentNode;
+        const scrollPosition = scrollContainer.scrollTop;
+        console.log('Scroll Position:', scrollPosition);
+        // You can do something with the scroll position here
+        props.onPageChange(Math.floor(scrollPosition / (pageCanvas.getBoundingClientRect().height + 10)) + 1)
+      }
+    };
+
+    // Attach scroll event listener whenever the ref is available
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.addEventListener('scroll', handleScroll);
+    }
+
+    // Clean up the event listener when the component is unmounted
+    return () => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }); // No dependency array to run the effect on every render
+
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if(scrollContainer && coordiate.current.parentNode) { 
+      const pageCanvas = coordiate.current.parentNode;
+      scrollContainer.scrollTop = (pageCanvas.getBoundingClientRect().height + 10) * (currentPage - 1);
+    }
+  }, [pageButtonCnt])
+
+  const [, drop] = useDrop(() => ({
+    accept: 'field',
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
+  })
   )
-  
+
   const descaleSize = (val: any) => {
     return (val / scale).toFixed(1);
   }
@@ -105,8 +143,8 @@ const Editor = (props: Props) => {
   };
 
   const handleMouseDown = (e: any) => {
-    if(e.target.className === 'react-pdf__Page__canvas') {
-      if(active) {
+    if (e.target.className === 'react-pdf__Page__canvas') {
+      if (active) {
         props.onActiveChange(null)
       }
       // setPosLT({x: descaleSize(e.clientX), y: descaleSize(e.clientY)})
@@ -114,13 +152,13 @@ const Editor = (props: Props) => {
   }
 
   const handleMouseMove = (e: any) => {
-    if(selected) {
+    if (selected) {
       const pageCanvas = coordiate.current.parentNode
       const left = Math.floor(e.clientX - pageCanvas.getBoundingClientRect().left)
       const top = Math.floor(e.clientY - pageCanvas.getBoundingClientRect().top)
-      
+
       temp.current.style.left = `${descaleSize(left)}px`
-      temp.current.style.top = `${descaleSize(top)}px`
+      temp.current.style.top = `${descaleSize(top - (pageCanvas.getBoundingClientRect().height + 10) * (totalPages - 1))}px`
     }
     // if(posLT) {
     //   setPosRB({ x: descaleSize(e.clientX), y: descaleSize(e.clientY) })
@@ -132,45 +170,48 @@ const Editor = (props: Props) => {
     // setPosRB(null)
   }
 
-  const handleWheel = (e:any) => {
-    props.onWheelEvent(e)
-  }
-
-  const handleClick = (e: any) => {
-    if(selected) {
+  const handleClick = (e: any, index: number) => {
+    if (selected) {
+      console.log(">>>>> cureent page", index, selected);
       const pageCanvas = coordiate.current.parentNode
+      // console.log(">>>>>>>> pagecanvas", pageCanvas, pageCanvas.getBoundingClientRect());
+      // console.log(">>>> pagsdfsdfdsfsd", coordiate.current);
+      // console.log(">>>>>>>, e", e, index);
       const left = Math.floor(e.clientX - pageCanvas.getBoundingClientRect().left)
       const top = Math.floor(e.clientY - pageCanvas.getBoundingClientRect().top)
-      
-      const field : FieldProperties = {
+
+      console.log(">>>> top", e.clientY, pageCanvas.getBoundingClientRect().top, top);
+      console.log("page", Math.floor(top / (pageCanvas.getBoundingClientRect().height + 10)));
+
+      const field: FieldProperties = {
         _id: new Date().getTime().toString(),
-        page: currentPage,
+        page: Math.floor(top / (pageCanvas.getBoundingClientRect().height + 10)) + 1,
         type: selected,
         position: {
           x: parseFloat(descaleSize(left)),
-          y: parseFloat(descaleSize(top))
+          y: parseFloat(descaleSize(top - (pageCanvas.getBoundingClientRect().height + 10) * (Math.floor(top / (pageCanvas.getBoundingClientRect().height + 10)))))
         },
         container: selected.icon === 'image' ? {
           width: 200,
           height: 200
-        }: {},
-        data: selected.icon === 'image' ? '' : selected.icon === 'choice'? [{title:selected.title, check: false}] : selected.title
+        } : {},
+        data: selected.icon === 'image' ? '' : selected.icon === 'choice' ? [{ title: selected.title, check: false }] : selected.title
       }
-      
+
       props.onAddNewField(field)
       props.onClearSelected()
     }
   }
 
   const handleActiveField = (field: FieldProperties | null) => {
-    if(active !== field) {
+    if (active !== field) {
       setShow(true)
       props.onActiveChange(field)
     }
   }
 
-  const handleCheckbox = (index:number, value: boolean) => {
-    if(!active) return
+  const handleCheckbox = (index: number, value: boolean) => {
+    if (!active) return
 
     let modify = active
     modify.data[index].check = value
@@ -179,8 +220,8 @@ const Editor = (props: Props) => {
     props.onUpdateFields(modify)
   }
 
-  const handleRemoveField = (item: FieldProperties) => {    
-    if(!item._id) return
+  const handleRemoveField = (item: FieldProperties) => {
+    if (!item._id) return
 
     props.onActiveChange(null)
     props.onRemoveField(item._id)
@@ -201,13 +242,13 @@ const Editor = (props: Props) => {
   }
 
   const updateSize = (dir: any, _delta: any, pos: any, e: any) => {
-    if(!active?.position || !active.position.x || !active.position.y) return
+    if (!active?.position || !active.position.x || !active.position.y) return
     const pageCanvas = coordiate.current.parentNode
 
     let top = 0, left = 0;
     const mouseL = descaleSize(Math.floor(pos.clientX - pageCanvas.getBoundingClientRect().left))
     const mouseT = descaleSize(Math.floor(pos.clientY - pageCanvas.getBoundingClientRect().top))
-    
+
     switch (dir) {
       case 'top':
         top = parseFloat(mouseT)
@@ -224,10 +265,10 @@ const Editor = (props: Props) => {
       case 'topRight':
         top = parseFloat(mouseT)
         left = active.position.x
-        break;      
+        break;
       case 'bottomLeft':
         top = active.position.y
-        left = parseFloat(mouseL)   
+        left = parseFloat(mouseL)
         break;
       case 'bottom':
       case 'bottomRight':
@@ -237,7 +278,7 @@ const Editor = (props: Props) => {
         top = active.position.y
         break;
     }
-    
+
     let modify = {
       ...active,
       container: {
@@ -250,24 +291,24 @@ const Editor = (props: Props) => {
         y: top
       }
     }
-    
+
     props.onActiveChange(modify)
     props.onUpdateFields(modify)
   }
 
   const renderTempField = () => {
-    if(!selected) return
-    if(Array.isArray(selected)) {
+    if (!selected) return
+    if (Array.isArray(selected)) {
       return
     } else {
       return (
-        <TempField 
+        <TempField
           ref={temp}>
           {
             selected.icon === 'image' ?
-            <img src={'200x200.png'} style={{ width: '200px', height: '200px', position: 'relative', zIndex: -1 }} />
-            :
-            <span style={{ whiteSpace: 'nowrap' }}>{selected.title}</span>
+              <img src={'200x200.png'} style={{ width: '200px', height: '200px', position: 'relative', zIndex: -1 }} />
+              :
+              <span style={{ whiteSpace: 'nowrap' }}>{selected.title}</span>
           }
         </TempField>
       )
@@ -276,7 +317,7 @@ const Editor = (props: Props) => {
 
   // const renderSelectionRect = () => {
   //   const page = coordiate.current.parentNode
-    
+
   //   const left = Math.floor(Math.min(posLT.x, posRB.x) - page.getBoundingClientRect().left)
   //   const top = Math.floor(Math.min(posLT.y, posRB.y) - page.getBoundingClientRect().top)
   //   const width = Math.abs(posLT.x - posRB.x)
@@ -291,30 +332,31 @@ const Editor = (props: Props) => {
   const handleTooltipShow = (visible: boolean) => {
 
     const tooltip = document.getElementsByClassName('ant-tooltip')[0] as HTMLElement;
-    if(!tooltip) return;
-    
-    if(visible) {
+    if (!tooltip) return;
+
+    if (visible) {
       tooltip.style.display = 'block'
     } else {
       tooltip.style.display = 'none'
     }
   }
 
-  const renderCurrentFields = () => {
-    if(!fieldsets) return
-    const renderCurrentList = fieldsets.filter((item: FieldProperties) => item.page === currentPage);
+  const renderCurrentFields = (page: number) => {
+    if (!fieldsets) return
+    const renderCurrentList = fieldsets.filter((item: FieldProperties) => item.page === page);
+    console.log(">>> renderCurrentFiedls ", renderCurrentList, fieldsets, currentPage, page);
 
     return renderCurrentList.map((item: FieldProperties) => {
-      if(item === active) {
+      if (item === active) {
         return (
-          <Tooltip 
+          <Tooltip
             color='lightgray'
             key={item._id}
             style={{ display: 'block' }}
             open={show}
             title={
               <Space.Compact>
-                <Button type='primary' onClick={()=>handleRemoveField(item)} danger icon={<DeleteOutlined />} />
+                <Button type='primary' onClick={() => handleRemoveField(item)} danger icon={<DeleteOutlined />} />
               </Space.Compact>
             }>
             <ActiveInsertField
@@ -327,87 +369,87 @@ const Editor = (props: Props) => {
                 height: item.container?.height as string | number
               }}
               scale={scale}
-              style={{ 
+              style={{
                 display: 'flex',
                 flexDirection: 'column',
                 fontSize: `${item.font?.size}px`,
-                fontFamily:  `${item.font?.family}`,
-                border:  `dash 1px green`,
-                background:  `yellow`,
-                opacity:  `${item.container?.opacity}%`,
+                fontFamily: `${item.font?.family}`,
+                border: `dash 1px green`,
+                background: `yellow`,
+                opacity: `${item.container?.opacity}%`,
               }}
-              onDragStart={()=>{handleTooltipShow(false)}}
+              onDragStart={() => { handleTooltipShow(false) }}
               onDragStop={(e: any, d: any) => updatePosition(e, d)}
               onResizeStop={(e: any, d: any, ref: any, delta: any, _position: any) => updateSize(d, delta, e, ref)}
               // bounds=".coord"
-              onClick={()=>handleActiveField(item)}
-              >
-                {
-                  item.type.icon === 'image' ?
+              onClick={() => handleActiveField(item)}
+            >
+              {
+                item.type.icon === 'image' ?
                   <img draggable={false} src={item.data as string} style={{ width: '100%', height: '100%', position: 'relative', zIndex: -1 }} />
                   :
                   Array.isArray(item.data) ?
                     item.data.map((choice, idx) => {
                       return (
-                        <Checkbox 
-                          style={{ 
+                        <Checkbox
+                          style={{
                             fontSize: `${item.font?.size}px`,
-                            fontFamily:  `${item.font?.family}`,
-                            opacity:  `${item.container?.opacity}%`,
+                            fontFamily: `${item.font?.family}`,
+                            opacity: `${item.container?.opacity}%`,
                             whiteSpace: 'nowrap'
                           }}
                           key={idx}
-                          checked={choice.check} 
-                          onChange={e => handleCheckbox(idx, e.target.checked)} 
+                          checked={choice.check}
+                          onChange={e => handleCheckbox(idx, e.target.checked)}
                           title={choice.title}> {choice.title} </Checkbox>
                       );
                     })
-                  :
-                  <span style={{ whiteSpace: 'nowrap' }}>{item.data}</span>
-                }
+                    :
+                    <span style={{ whiteSpace: 'nowrap' }}>{item.data}</span>
+              }
             </ActiveInsertField>
           </Tooltip>
         )
       } else {
-        
+
         return (
           <InsertField
             key={item._id}
-            onClick={()=>handleActiveField(item)}
+            onClick={() => handleActiveField(item)}
             style={{
               display: 'flex',
               flexDirection: 'column',
               width: `${item.container?.width}px`,
               height: `${item.container?.height}px`,
               fontSize: `${item.font?.size}px`,
-              fontFamily:  `${item.font?.family}`,
-              border:  `solid 1px ${item.container?.border}`,
-              background:  `${item.container?.background}`,
-              opacity:  `${item.container?.opacity}%`,
-              left: `${item.position.x}px`, 
+              fontFamily: `${item.font?.family}`,
+              border: `solid 1px ${item.container?.border}`,
+              background: `${item.container?.background}`,
+              opacity: `${item.container?.opacity}%`,
+              left: `${item.position.x}px`,
               top: `${item.position.y}px`,
             }}
-            >
+          >
             {
               item.type.icon === 'image' ?
-              <img draggable={false} src={item.data as string} style={{ width: '100%', height: '100%' }} />
-              :
-              Array.isArray(item.data) ?
-                item.data.map((choice, idx) => <Checkbox
-                  style={{ 
-                    color: 'black',
-                    fontSize: `${item.font?.size}px`,
-                    fontFamily:  `${item.font?.family}`,
-                    opacity:  `${item.container?.opacity}%`,
-                    whiteSpace: 'nowrap'
-                  }} 
-                  key={idx} 
-                  checked={choice.check}> 
-                  {choice.title} 
+                <img draggable={false} src={item.data as string} style={{ width: '100%', height: '100%' }} />
+                :
+                Array.isArray(item.data) ?
+                  item.data.map((choice, idx) => <Checkbox
+                    style={{
+                      color: 'black',
+                      fontSize: `${item.font?.size}px`,
+                      fontFamily: `${item.font?.family}`,
+                      opacity: `${item.container?.opacity}%`,
+                      whiteSpace: 'nowrap'
+                    }}
+                    key={idx}
+                    checked={choice.check}>
+                    {choice.title}
                   </Checkbox>
-                )
-              :
-              <span style={{ whiteSpace: 'nowrap' }}>{item.data}</span>
+                  )
+                  :
+                  <span style={{ whiteSpace: 'nowrap' }}>{item.data}</span>
             }
           </InsertField>
         )
@@ -415,63 +457,63 @@ const Editor = (props: Props) => {
     });
   };
 
-  const renderAddedFileds = ()=>{
-    if(!templates) return
-    
+  const renderAddedFileds = () => {
+    if (!templates) return
+
     const renderAddedList = templates.filter((item: FieldProperties) => item.page === currentPage);
-    
+
     return renderAddedList.map((item: FieldProperties, index: number) => {
-      if(item.type.icon === 'image') {
-        return <AddedField 
-          style={{ 
+      if (item.type.icon === 'image') {
+        return <AddedField
+          style={{
             width: `${item.container?.width}px`,
             height: `${item.container?.height}px`,
-            border:  `solid 1px ${item.container?.border}`,
-            background:  `${item.container?.background}`,
-            opacity:  `${item.container?.opacity}%`,
+            border: `solid 1px ${item.container?.border}`,
+            background: `${item.container?.background}`,
+            opacity: `${item.container?.opacity}%`,
             left: `${item.position.x}px`,
             top: `${item.position.y}px`
           }}
           key={index}>
           <img src={item.data as string} draggable={false} alt={item.data.toString()} style={{ width: '100%', height: '100%' }} />
         </AddedField>
-      } else if(item.type.icon === 'choice') {
+      } else if (item.type.icon === 'choice') {
         return <AddedField
           key={index}
           style={{
             width: `${item.container?.width}px`,
             height: `${item.container?.height}px`,
-            border:  `solid 1px ${item.container?.border}`,
-            background:  `${item.container?.background}`,
-            opacity:  `${item.container?.opacity}%`,
+            border: `solid 1px ${item.container?.border}`,
+            background: `${item.container?.background}`,
+            opacity: `${item.container?.opacity}%`,
             left: `${item.position.x}px`,
             top: `${item.position.y}px`
           }}>
           {
-            Array.isArray(item.data)&&item.data.map(choice=>{
-              return  <Checkbox
-                style={{ 
+            Array.isArray(item.data) && item.data.map(choice => {
+              return <Checkbox
+                style={{
                   color: 'black',
                   fontSize: `${item.font?.size}px`,
-                  fontFamily:  `${item.font?.family}`,
-                  opacity:  `${item.container?.opacity}%`,
+                  fontFamily: `${item.font?.family}`,
+                  opacity: `${item.container?.opacity}%`,
                   whiteSpace: 'nowrap'
-                }} 
-                key={choice.title} 
-                checked={choice.check}> 
-                {choice.title} 
+                }}
+                key={choice.title}
+                checked={choice.check}>
+                {choice.title}
               </Checkbox>
             })
           }
         </AddedField>
       } else {
-        return <AddedField 
+        return <AddedField
           style={{
             width: `${item.container?.width}px`,
             height: `${item.container?.height}px`,
-            border:  `solid 1px ${item.container?.border}`,
-            background:  `${item.container?.background}`,
-            opacity:  `${item.container?.opacity}%`,
+            border: `solid 1px ${item.container?.border}`,
+            background: `${item.container?.background}`,
+            opacity: `${item.container?.opacity}%`,
             left: `${item.position.x}px`,
             top: `${item.position.y}px`
           }}
@@ -482,25 +524,68 @@ const Editor = (props: Props) => {
     })
   }
 
-  const loadSuccess = ({ numPages: nextNumPages}: PDFDocumentProxy) => {
-    props.onSuccessLoad(nextNumPages)
+  const loadSuccess = ({ numPages: nextNumPages }: PDFDocumentProxy) => {
+    props.onSuccessLoad(nextNumPages);
+    setTotalPages(nextNumPages);
   }
-  
+
+
   return (
-    <Document 
+    <Document
       onLoadSuccess={loadSuccess}
       options={options}
       file={source}>
-      <div style={{ height: 'calc(100vh - 116px)',  overflow: 'auto', backgroundColor: 'lightgray', display: 'flex', justifyContent: 'center', paddingTop: '20px', paddingBottom: '20px' }}>
-        <Page scale={scale} canvasRef={drop} onKeyPress={handleKeyPress} onWheel={handleWheel} onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} pageNumber={currentPage} renderAnnotationLayer={false} renderTextLayer={false}>
-          <div id='elementToCapture' style={{ position: 'absolute', top: 0, left: 0, transformOrigin: 'top left', transform: `scale(${scale})` }} className="viewport">
-            {selected && renderTempField()}
-            {renderCurrentFields()}
-            {renderAddedFileds()}
-            {/* {posRB && renderSelectionRect()} */}
-          </div>
-          <div className='coord' ref={coordiate} style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, scale: 1 }}></div>
-        </Page>
+      <div
+        style={{
+          height: 'calc(100vh - 116px)',
+          overflow: 'auto',
+          backgroundColor: 'lightgray',
+          // display: 'flex',
+          justifyContent: 'center',
+          paddingTop: '10px',
+          // paddingBottom: '20px'
+        }}
+        ref={scrollContainerRef}
+      >
+        {
+          Array.from(new Array(totalPages), (el, index) => {
+            console.log(el);
+            return (
+              <div
+                style={{
+                  justifyContent: "center",
+                  display: "flex",
+                  marginBottom: "10px"
+                }}
+                key={index}
+              >
+                <Page
+                  key={`page_${index + 1}`}
+                  pageNumber={index + 1}
+                  scale={scale}
+                  canvasRef={drop}
+                  onKeyPress={handleKeyPress}
+                  onClick={(e) => handleClick(e, index + 1)}
+                  // onClick={() => alert(index)}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  // pageNumber={currentPage}
+                  renderAnnotationLayer={false}
+                  renderTextLayer={false}
+                >
+                  <div id='elementToCapture' style={{ position: 'absolute', top: 0, left: 0, transformOrigin: 'top left', transform: `scale(${scale})` }} className="viewport">
+                    {selected && index === (totalPages - 1) && renderTempField()}
+                    {renderCurrentFields(index + 1)}
+                    {renderAddedFileds()}
+                    {/* {posRB && renderSelectionRect()} */}
+                  </div>
+                  {index === 0 && <div className='coord' ref={coordiate} style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, scale: 1 }}></div>}
+                </Page>
+              </div>
+            )
+          })}
+
       </div>
     </Document>
   );

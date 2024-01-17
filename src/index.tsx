@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-// import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 
 import {
   Field,
@@ -26,34 +25,8 @@ interface Props {
   templates: FieldProperties[];
   generate: Boolean;
   clearGenerate:() => void;
-  handleWheelEvent: (e: any) => void;
-}
-/*
-function getFontName(font: string | undefined): StandardFonts {
-  switch (font) {
-    case 'Courier': return StandardFonts.Courier;
-    case 'CourierBold': return StandardFonts.CourierBold;
-    case 'Helvetica': return StandardFonts.Helvetica;
-    case 'HelveticaBold': return StandardFonts.HelveticaBold;
-    case 'TimesRoman': return StandardFonts.TimesRoman;
-    case 'TimesRomanBold': return StandardFonts.TimesRomanBold;
-    default: return StandardFonts.Helvetica;
-  }
 }
 
-function hexToRgb(hex: string) {
-  // Remove the '#' character if present
-  hex = hex.replace(/^#/, '');
-
-  // Parse the red (RR), green (GG), and blue (BB) components
-  const r = parseInt(hex.slice(0, 2), 16) / 255;
-  const g = parseInt(hex.slice(2, 4), 16) / 255;
-  const b = parseInt(hex.slice(4, 6), 16) / 255;
-
-  // Return the RGB value using pdf-lib's rgb() function
-  return rgb(r, g, b);
-}
-*/
 export const PDFEditor: React.FC<Props> = (props: Props) => {
 
   const handleActiveChange = (field: FieldProperties | null) => {
@@ -99,6 +72,13 @@ export const PDFEditor: React.FC<Props> = (props: Props) => {
     })
   }
 
+  const setCurrentPage = (index: number) => {
+    props.setSettings({
+      ...props.settings,
+      currentPage: index
+    })
+  }
+
   const handleFileGenerate = async() => {
     if(!props.fieldsets.length) return
     props.setGenerate(props.templates.concat(props.fieldsets), props.path);
@@ -141,8 +121,9 @@ export const PDFEditor: React.FC<Props> = (props: Props) => {
         onAddNewField={handleAddNewField}
         onUpdateFields={handleUpdateFieldSets}
         onRemoveField={handleRemoveField}
-        onSuccessLoad={handleTPageChange}
-        onWheelEvent={props.handleWheelEvent} />
+        onSuccessLoad={handleTPageChange} 
+        onPageChange={setCurrentPage}
+        />
     </DndProvider>
   )
 }

@@ -2,7 +2,7 @@ export interface Settings {
   currentPage: number,
   totalPage: number,
   scale: number,
-
+  pageButtonCnt: number,
   pageMode?: string,
   query?: string
 }
