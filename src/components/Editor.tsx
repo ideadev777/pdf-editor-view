@@ -457,10 +457,10 @@ const Editor = (props: Props) => {
     });
   };
 
-  const renderAddedFileds = () => {
+  const renderAddedFileds = (page: number) => {
     if (!templates) return
 
-    const renderAddedList = templates.filter((item: FieldProperties) => item.page === currentPage);
+    const renderAddedList = templates.filter((item: FieldProperties) => item.page === page);
 
     return renderAddedList.map((item: FieldProperties, index: number) => {
       if (item.type.icon === 'image') {
@@ -577,7 +577,7 @@ const Editor = (props: Props) => {
                   <div id='elementToCapture' style={{ position: 'absolute', top: 0, left: 0, transformOrigin: 'top left', transform: `scale(${scale})` }} className="viewport">
                     {selected && index === (totalPages - 1) && renderTempField()}
                     {renderCurrentFields(index + 1)}
-                    {renderAddedFileds()}
+                    {renderAddedFileds(index + 1)}
                     {/* {posRB && renderSelectionRect()} */}
                   </div>
                   {index === 0 && <div className='coord' ref={coordiate} style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, scale: 1 }}></div>}
