@@ -54,10 +54,12 @@ const options = {
 interface Props {
   source: string,
   settings: Settings,
+  scale: number
   selected: Field | null,
   active: FieldProperties | null,
   fieldsets: FieldProperties[],
   templates?: FieldProperties[],
+  pageButtonCnt: number,
   onAddNewField: (field: FieldProperties) => void,
   onUpdateFields: (field: FieldProperties) => void
   onRemoveField: (id: string) => void,
@@ -76,9 +78,9 @@ const Editor = (props: Props) => {
 
   // const [posLT, setPosLT] = useState<any>(null)
   // const [posRB, setPosRB] = useState<any>(null)
-  const { source, settings, selected, active, fieldsets, templates } = props;
+  const { source, settings, selected, active, fieldsets, templates, pageButtonCnt, scale } = props;
 
-  const { currentPage, pageButtonCnt, scale } = settings;
+  const { currentPage } = settings;
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -90,9 +92,8 @@ const Editor = (props: Props) => {
       if (scrollContainer) {
         const pageCanvas = coordiate.current.parentNode;
         const scrollPosition = scrollContainer.scrollTop;
-        console.log('Scroll Position:', scrollPosition);
         // You can do something with the scroll position here
-        props.onPageChange(Math.floor(scrollPosition / (pageCanvas.getBoundingClientRect().height + 10)) + 1)
+        if (currentPage !== Math.floor(scrollPosition / (pageCanvas.getBoundingClientRect().height + 10)) + 1) props.onPageChange(Math.floor(scrollPosition / (pageCanvas.getBoundingClientRect().height + 10)) + 1)
       }
     };
 
@@ -111,7 +112,7 @@ const Editor = (props: Props) => {
 
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
-    if(scrollContainer && coordiate.current.parentNode) { 
+    if (scrollContainer && coordiate.current.parentNode) {
       const pageCanvas = coordiate.current.parentNode;
       scrollContainer.scrollTop = (pageCanvas.getBoundingClientRect().height + 10) * (currentPage - 1);
     }
@@ -158,7 +159,7 @@ const Editor = (props: Props) => {
       const top = Math.floor(e.clientY - pageCanvas.getBoundingClientRect().top)
 
       temp.current.style.left = `${descaleSize(left)}px`
-      temp.current.style.top = `${descaleSize(top - (pageCanvas.getBoundingClientRect().height + 10) * (totalPages - 1))}px`
+      temp.current.style.top = `${descaleSize(top)}px`
     }
     // if(posLT) {
     //   setPosRB({ x: descaleSize(e.clientX), y: descaleSize(e.clientY) })
@@ -181,11 +182,10 @@ const Editor = (props: Props) => {
       const top = Math.floor(e.clientY - pageCanvas.getBoundingClientRect().top)
 
       console.log(">>>> top", e.clientY, pageCanvas.getBoundingClientRect().top, top);
-      console.log("page", Math.floor(top / (pageCanvas.getBoundingClientRect().height + 10)));
 
       const field: FieldProperties = {
         _id: new Date().getTime().toString(),
-        page: Math.floor(top / (pageCanvas.getBoundingClientRect().height + 10)) + 1,
+        page: totalPages - Math.floor(-(top - (pageCanvas.getBoundingClientRect().height + 10)) / (pageCanvas.getBoundingClientRect().height + 10)),
         type: selected,
         position: {
           x: parseFloat(descaleSize(left)),
@@ -231,11 +231,16 @@ const Editor = (props: Props) => {
     setShow(true)
     handleTooltipShow(true)
 
+    const pageCanvas = coordiate.current.parentNode;
+    // const top = Math.floor(e.y - pageCanvas.getBoundingClientRect().top)
     let modify = active as FieldProperties;
+
     modify.position = {
       x: e.x,
-      y: e.y
+      y: (e.y + pageCanvas.getBoundingClientRect().height + 10) % (pageCanvas.getBoundingClientRect().height + 10)
     }
+    modify.page = Math.floor((e.y + (modify?.page - 1) * (pageCanvas.getBoundingClientRect().height + 10)) / (pageCanvas.getBoundingClientRect().height + 10)) + 1
+    // modify.page = Math.floor(e.y / (pageCanvas.getBoundingClientRect().height + 10)) + 1
 
     props.onActiveChange(modify)
     props.onUpdateFields(modify)
@@ -574,13 +579,13 @@ const Editor = (props: Props) => {
                   renderAnnotationLayer={false}
                   renderTextLayer={false}
                 >
-                  <div id='elementToCapture' style={{ position: 'absolute', top: 0, left: 0, transformOrigin: 'top left', transform: `scale(${scale})` }} className="viewport">
+                  <div id='elementToCapture' style={{ position: 'absolute', top: 0, left: 0, transformOrigin: 'top left', transform: `scale(${scale})`, zIndex: 1 }} className="viewport">
                     {selected && index === (totalPages - 1) && renderTempField()}
                     {renderCurrentFields(index + 1)}
                     {renderAddedFileds(index + 1)}
                     {/* {posRB && renderSelectionRect()} */}
                   </div>
-                  {index === 0 && <div className='coord' ref={coordiate} style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, scale: 1 }}></div>}
+                  {index === (totalPages - 1) && <div className='coord' ref={coordiate} style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, scale: 1 }}></div>}
                 </Page>
               </div>
             )

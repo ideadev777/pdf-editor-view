@@ -25,6 +25,8 @@ interface Props {
   templates: FieldProperties[];
   generate: Boolean;
   clearGenerate:() => void;
+  pageButtonCnt: number;
+  scale: number;
 }
 
 export const PDFEditor: React.FC<Props> = (props: Props) => {
@@ -114,8 +116,10 @@ export const PDFEditor: React.FC<Props> = (props: Props) => {
         active={props.active}
         selected={props.selected}
         settings={props.settings}
+        scale={props.scale}
         fieldsets={props.fieldsets}
         templates={props.templates}
+        pageButtonCnt={props.pageButtonCnt}
         onClearSelected={handleClearSelected}
         onActiveChange={handleActiveChange}
         onAddNewField={handleAddNewField}
