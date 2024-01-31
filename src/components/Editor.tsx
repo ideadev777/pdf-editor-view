@@ -194,7 +194,13 @@ const Editor = (props: Props) => {
         container: selected.icon === 'image' ? {
           width: 200,
           height: 200
-        } : {},
+        } : {
+          background: "#ffffff",
+          border: "#ffffff",
+          opacity: 100,
+          height: Math.floor(e.target.getBoundingClientRect().height),
+          width: Math.floor(e.target.getBoundingClientRect().width)
+        },
         data: selected.icon === 'image' ? '' : selected.icon === 'choice' ? [{ title: selected.title, check: false }] : selected.title
       }
 
@@ -252,7 +258,9 @@ const Editor = (props: Props) => {
 
     let top = 0, left = 0;
     const mouseL = descaleSize(Math.floor(pos.clientX - pageCanvas.getBoundingClientRect().left))
-    const mouseT = descaleSize(Math.floor(pos.clientY - pageCanvas.getBoundingClientRect().top))
+    const mouseT = descaleSize(Math.floor(pos.clientY - pageCanvas.getBoundingClientRect().top) - (pageCanvas.getBoundingClientRect().height + 10) * (Math.floor(Math.floor(pos.clientY - pageCanvas.getBoundingClientRect().top) / (pageCanvas.getBoundingClientRect().height + 10))))
+
+    const page = totalPages - Math.floor(-(Math.floor(pos.clientY - pageCanvas.getBoundingClientRect().top) - (pageCanvas.getBoundingClientRect().height + 10)) / (pageCanvas.getBoundingClientRect().height + 10));
 
     switch (dir) {
       case 'top':
@@ -294,7 +302,8 @@ const Editor = (props: Props) => {
       position: {
         x: left,
         y: top
-      }
+      },
+      page: page
     }
 
     props.onActiveChange(modify)
