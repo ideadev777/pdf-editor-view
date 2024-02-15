@@ -175,9 +175,6 @@ const Editor = (props: Props) => {
     if (selected) {
       console.log(">>>>> cureent page", index, selected);
       const pageCanvas = coordiate.current.parentNode
-      // console.log(">>>>>>>> pagecanvas", pageCanvas, pageCanvas.getBoundingClientRect());
-      // console.log(">>>> pagsdfsdfdsfsd", coordiate.current);
-      // console.log(">>>>>>>, e", e, index);
       const left = Math.floor(e.clientX - pageCanvas.getBoundingClientRect().left)
       const top = Math.floor(e.clientY - pageCanvas.getBoundingClientRect().top)
 
@@ -233,20 +230,19 @@ const Editor = (props: Props) => {
     props.onRemoveField(item._id)
   }
 
-  const updatePosition = (_pos: string, e: any) => {
+  const updatePosition = (_pos: any, e: any) => {
     setShow(true)
     handleTooltipShow(true)
 
-    const pageCanvas = coordiate.current.parentNode;
     // const top = Math.floor(e.y - pageCanvas.getBoundingClientRect().top)
     let modify = active as FieldProperties;
 
     modify.position = {
       x: e.x,
-      y: (e.y + pageCanvas.getBoundingClientRect().height + 10) % (pageCanvas.getBoundingClientRect().height + 10)
+      // y: (e.y * scale + pageCanvas.getBoundingClientRect().height + 10) % (pageCanvas.getBoundingClientRect().height + 10)
+      y: (e.y + 802) % 802
     }
-    modify.page = Math.floor((e.y + (modify?.page - 1) * (pageCanvas.getBoundingClientRect().height + 10)) / (pageCanvas.getBoundingClientRect().height + 10)) + 1
-    // modify.page = Math.floor(e.y / (pageCanvas.getBoundingClientRect().height + 10)) + 1
+    modify.page = Math.floor((e.y + (modify?.page - 1) * 802) / 802) + 1
 
     props.onActiveChange(modify)
     props.onUpdateFields(modify)
@@ -577,6 +573,7 @@ const Editor = (props: Props) => {
                   key={`page_${index + 1}`}
                   pageNumber={index + 1}
                   scale={scale}
+                  height={790}
                   canvasRef={drop}
                   onKeyPress={handleKeyPress}
                   onClick={(e) => handleClick(e, index + 1)}
