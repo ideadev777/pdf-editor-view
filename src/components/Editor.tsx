@@ -66,7 +66,8 @@ interface Props {
   onActiveChange: (fields: FieldProperties | null) => void
   onClearSelected: () => void,
   onSuccessLoad: (page: number) => void,
-  onPageChange: (page: number) => void
+  onPageChange: (page: number) => void,
+  onMouseChange: (x: string, y: string) => void
 }
 
 const Editor = (props: Props) => {
@@ -160,6 +161,8 @@ const Editor = (props: Props) => {
 
       temp.current.style.left = `${descaleSize(left)}px`
       temp.current.style.top = `${descaleSize(top)}px`
+
+      props.onMouseChange(`${descaleSize(left)}`, `${descaleSize(top)}`);
     }
     // if(posLT) {
     //   setPosRB({ x: descaleSize(e.clientX), y: descaleSize(e.clientY) })

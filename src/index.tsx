@@ -27,6 +27,7 @@ interface Props {
   clearGenerate:() => void;
   pageButtonCnt: number;
   scale: number;
+  onMouseChangeOnPage: (x: string, y: string) => void;
 }
 
 export const PDFEditor: React.FC<Props> = (props: Props) => {
@@ -127,6 +128,7 @@ export const PDFEditor: React.FC<Props> = (props: Props) => {
         onRemoveField={handleRemoveField}
         onSuccessLoad={handleTPageChange} 
         onPageChange={setCurrentPage}
+        onMouseChange={props.onMouseChangeOnPage}
         />
     </DndProvider>
   )
